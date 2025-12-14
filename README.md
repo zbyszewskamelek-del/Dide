@@ -1,34 +1,70 @@
-// mobile_app/lib/services/tax_engine_service.dart
-import '../models/pos_model.dart';
+// mobile_app/lib/models/pos_model.dart (Дополнение)
+// ... (существующие enum, Product, Discount - остаются прежними) ...
 
-class TaxEngineService {
-  // Налоговые ставки по классу (имитация сложной системы)
-  static const Map<TaxClass, double> _taxRates = {
-    TaxClass.standard: 0.10, // 10%
-    TaxClass.food: 0.07,     // 7%
-    TaxClass.digital: 0.05,  // 5%
-    TaxClass.zeroRated: 0.0, // 0%
-  };
+enum TaxClass { standard, food, digital, zeroRated } // Классы налогообложения
 
-  // Правило TAX-001: Расчет налога
-  double calculateTax(List<LineItem> items, Customer? customer, String storeLocation) {
-    double totalTaxableAmount = 0.0;
-    
-    // Если клиент освобожден от налога (например, опт)
-    if (customer != null && customer.isTaxExempt) {
-      return 0.0;
-    }
-    
-    for (var item in items) {
-      final rate = _taxRates[item.product.taxClass] ?? _taxRates[TaxClass.standard]!;
-      
-      // Налог применяется к сумме ПОСЛЕ скидок
-      totalTaxableAmount += item.totalAfterDiscount * rate;
-    }
-    
-    // В реальном приложении: корректировка ставки налога в зависимости от storeLocation
-    // if (storeLocation == 'NewYork') totalTaxableAmount *= 1.01;
-    
-    return totalTaxableAmount;
+class Product {
+  // ... (предыдущие поля) ...
+  final TaxClass taxClass; // Новый класс налога
+  
+  Product({
+    // ... (предыдущие поля) ...
+    this.taxClass = TaxClass.standard,
+  });
+}
+
+class Customer {
+  final String customerId;
+  final String name;
+  final String loyaltyTier; // Bronze, Silver, Gold
+  final int loyaltyPoints;
+  final bool isTaxExempt; // Освобождение от налога (например, оптовые покупатели)
+
+  Customer({required this.customerId, required this.name, this.loyaltyTier = 'Bronze', this.loyaltyPoints = 0, this.isTaxExempt = false});
+  
+  Customer copyWith({int? loyaltyPoints}) {
+    return Customer(
+      customerId: customerId, 
+      name: name, 
+      loyaltyTier: loyaltyTier,
+      loyaltyPoints: loyaltyPoints ?? this.loyaltyPoints,
+      isTaxExempt: isTaxExempt,
+    );
   }
+}
+
+class LineItem {
+  // ... (предыдущие поля) ...
+  double reservedStockAtTime; // Сколько товара было зарезервировано
+  
+  // Добавляем конструктор, чтобы включить новое поле
+  LineItem({
+    // ... (предыдущие поля) ...
+    required this.reservedStockAtTime,
+  }) : lineId = 'L-${Random().nextInt(99999)}';
+  
+  // Обновляем copyWith для LineItem (обязательно для Riverpod)
+  LineItem copyWith({int? quantity, double? priceOverride, List<Discount>? appliedDiscounts}) {
+    return LineItem(
+        product: product, 
+        quantity: quantity ?? this.quantity, 
+        priceOverride: priceOverride ?? this.priceOverride, 
+        appliedDiscounts: appliedDiscounts ?? this.appliedDiscounts, 
+        reservedStockAtTime: reservedStockAtTime
+    );
+  }
+
+  // ... (getter'ы subtotalBeforeDiscount, totalAfterDiscount) ...
+}
+
+class Transaction {
+  // ... (предыдущие поля) ...
+  final Customer? customer; // Привязка к покупателю
+  final double pointsEarned; // Сколько баллов заработано
+  final double pointsRedeemed; // Сколько баллов потрачено
+  
+  Transaction({
+    // ... (предыдущие поля) ...
+    this.customer, required this.pointsEarned, required this.pointsRedeemed
+  });
 }
