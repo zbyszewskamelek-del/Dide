@@ -1,70 +1,17 @@
-// mobile_app/lib/models/pos_model.dart (Дополнение)
-// ... (существующие enum, Product, Discount - остаются прежними) ...
+# 🔍 aythena-headphone-finder-hub: Умная Система Поиска Наушников (Bluetooth/BLE)
 
-enum TaxClass { standard, food, digital, zeroRated } // Классы налогообложения
+Этот репозиторий содержит архитектуру для создания высокоточной системы поиска потерянных беспроводных наушников. Вместо простого GPS, мы используем алгоритмы триангуляции и тепловые карты силы сигнала (RSSI) для определения местоположения в помещении.
 
-class Product {
-  // ... (предыдущие поля) ...
-  final TaxClass taxClass; // Новый класс налога
-  
-  Product({
-    // ... (предыдущие поля) ...
-    this.taxClass = TaxClass.standard,
-  });
-}
+## Архитектура
+* **Frontend:** Flutter/Dart (Riverpod, Bluetooth BLE Scanner, Map Visualization)
+* **Backend:** Python/Flask Mock (RSSI Processing Engine, Location Storage)
 
-class Customer {
-  final String customerId;
-  final String name;
-  final String loyaltyTier; // Bronze, Silver, Gold
-  final int loyaltyPoints;
-  final bool isTaxExempt; // Освобождение от налога (например, оптовые покупатели)
+## 🔑 Ключевые принципы
+1.  **RSSI Triangulation:** Использование нескольких точек измерения силы сигнала для точного определения местоположения в 2D.
+2.  **Low-Power Background Scan:** Асинхронный агент для поиска наушников, минимизирующий расход батареи хост-устройства.
+3.  **Confidence Score:** Каждое предполагаемое местоположение получает оценку уверенности (вероятности).
+4.  **Real-Time Heatmap:** Визуализация силы сигнала на карте помещения.
 
-  Customer({required this.customerId, required this.name, this.loyaltyTier = 'Bronze', this.loyaltyPoints = 0, this.isTaxExempt = false});
-  
-  Customer copyWith({int? loyaltyPoints}) {
-    return Customer(
-      customerId: customerId, 
-      name: name, 
-      loyaltyTier: loyaltyTier,
-      loyaltyPoints: loyaltyPoints ?? this.loyaltyPoints,
-      isTaxExempt: isTaxExempt,
-    );
-  }
-}
+---
 
-class LineItem {
-  // ... (предыдущие поля) ...
-  double reservedStockAtTime; // Сколько товара было зарезервировано
-  
-  // Добавляем конструктор, чтобы включить новое поле
-  LineItem({
-    // ... (предыдущие поля) ...
-    required this.reservedStockAtTime,
-  }) : lineId = 'L-${Random().nextInt(99999)}';
-  
-  // Обновляем copyWith для LineItem (обязательно для Riverpod)
-  LineItem copyWith({int? quantity, double? priceOverride, List<Discount>? appliedDiscounts}) {
-    return LineItem(
-        product: product, 
-        quantity: quantity ?? this.quantity, 
-        priceOverride: priceOverride ?? this.priceOverride, 
-        appliedDiscounts: appliedDiscounts ?? this.appliedDiscounts, 
-        reservedStockAtTime: reservedStockAtTime
-    );
-  }
-
-  // ... (getter'ы subtotalBeforeDiscount, totalAfterDiscount) ...
-}
-
-class Transaction {
-  // ... (предыдущие поля) ...
-  final Customer? customer; // Привязка к покупателю
-  final double pointsEarned; // Сколько баллов заработано
-  final double pointsRedeemed; // Сколько баллов потрачено
-  
-  Transaction({
-    // ... (предыдущие поля) ...
-    this.customer, required this.pointsEarned, required this.pointsRedeemed
-  });
-}
+## 📂 Структура проекта
